@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${client.id} != null ? 'Modifier le client' : 'Nouveau client'">Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="inner container">
+        <div class="brand">Demo MVC</div>
+        <nav class="nav">
+            <a class="navlink" href="/home">Accueil</a>
+            <a class="navlink" href="/clients">Clients</a>
+            <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
+                <input type="hidden" th:if="${_csrf != null}"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button class="btn" type="submit">Se déconnecter</button>
+            </form>
+        </nav>
+    </div>
+</div>
+
+<main class="container">
+    <div class="card">
+        <h1 style="margin-top:0" th:text="${client.id} != null ? 'Modifier le client' : 'Nouveau client'">Client</h1>
+
+        <form th:action="${client.id} != null ? @{/clients/{id}(id=${client.id})} : @{/clients}"
+              method="post" th:object="${client}" sec:authorize="hasRole('ADMIN')">
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="row">
+                <div>
+                    <label class="label">Nom</label>
+                    <input class="input" th:field="*{name}" required>
+                </div>
+                <div>
+                    <label class="label">Email</label>
+                    <input class="input" th:field="*{email}" type="email">
+                </div>
+                <div>
+                    <label class="label">Téléphone</label>
+                    <input class="input" th:field="*{phone}">
+                </div>
+                <div>
+                    <label class="label">Adresse</label>
+                    <input class="input" th:field="*{address}">
+                </div>
+            </div>
+
+            <div class="mt16">
+                <button class="btn" type="submit" th:text="${client.id} != null ? 'Mettre à jour' : 'Créer'">Enregistrer</button>
+                <a class="navlink" href="/clients">Annuler</a>
+            </div>
+        </form>
+
+        <form class="mt16" th:if="${client.id} != null" th:action="@{/clients/{id}/delete(id=${client.id})}"
+              method="post" sec:authorize="hasRole('ADMIN')">
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button class="btn btn-danger" type="submit"
+                    onclick="return confirm('Supprimer ce client ?')">Supprimer</button>
+        </form>
+    </div>
+</main>
+
+<footer class="footer">
+    <small>© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> — Demo MVC</small>
+</footer>
+</body>
+</html>

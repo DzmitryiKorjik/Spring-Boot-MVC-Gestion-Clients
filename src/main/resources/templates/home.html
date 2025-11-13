@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="inner container">
+        <div class="brand">Demo MVC</div>
+        <nav class="nav">
+            <a class="navlink" href="/home">Accueil</a>
+            <a class="navlink" href="/clients" sec:authorize="isAuthenticated()">Clients</a>
+            <a class="navlink" href="/login" sec:authorize="isAnonymous()">Se connecter</a>
+            <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
+                <input type="hidden" th:if="${_csrf != null}"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button class="btn" type="submit">Se déconnecter</button>
+            </form>
+        </nav>
+    </div>
+</div>
+
+<main class="container">
+    <h1>Bienvenue</h1>
+    <p class="subtitle">Application Spring Boot + Thymeleaf</p>
+
+    <div class="alert" th:if="${message}" th:text="${message}">Bienvenue !</div>
+
+    <p class="mt12" sec:authorize="isAuthenticated()">
+        Connecté en tant que <strong sec:authentication="name">utilisateur</strong>.
+    </p>
+
+    <div class="card mt16">
+        <h2 style="margin-top:0">Tableau de bord</h2>
+        <div class="grid mt12">
+            <a class="btn" href="/clients" sec:authorize="isAuthenticated()">Gérer les clients</a>
+            <a class="btn btn-secondary" href="/login" sec:authorize="isAnonymous()">Se connecter</a>
+        </div>
+        <p class="subtitle mt12">
+            Astuce : les actions de création/édition/suppression sont réservées à <strong>ADMIN</strong>.
+        </p>
+    </div>
+</main>
+
+<footer class="footer">
+    <small>© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> — Demo MVC</small>
+</footer>
+</body>
+</html>
