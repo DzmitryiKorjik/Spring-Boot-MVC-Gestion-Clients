@@ -9,13 +9,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+// Contrôleur pour gérer les opérations CRUD sur les clients
 @Controller
 @RequestMapping("/clients")
 public class ClientController {
 
+    // Dépendance vers le repository des clients
     private final ClientRepository repo;
+    // Injection du repository via le constructeur
     public ClientController(ClientRepository repo){ this.repo = repo; }
 
+    // Affiche la liste des clients
     @GetMapping
     public String list(Model model){
         model.addAttribute("clients", repo.findAll());
@@ -23,6 +27,7 @@ public class ClientController {
         return "clients/list";
     }
 
+    // Affiche le formulaire de création d'un nouveau client
     @PostMapping
     public String create(@ModelAttribute("client") Client c, RedirectAttributes ra){
         repo.save(c);
@@ -30,6 +35,7 @@ public class ClientController {
         return "redirect:/clients";
     }
 
+    // Affiche le formulaire d'édition d'un client existant
     @GetMapping("/{id}/edit")
     public String edit(@PathVariable Long id, Model model){
         Client c = repo.findById(id)
@@ -38,6 +44,7 @@ public class ClientController {
         return "clients/edit";
     }
 
+    // Met à jour un client existant
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @ModelAttribute("client") Client form, RedirectAttributes ra) {
         Client existing = repo.findById(id)
@@ -51,6 +58,7 @@ public class ClientController {
         return "redirect:/clients";
     }
 
+    // Supprime un client existant
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra){
         repo.deleteById(id);

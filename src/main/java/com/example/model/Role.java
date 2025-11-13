@@ -3,10 +3,12 @@ package com.example.model;
 import jakarta.persistence.*;
 import java.util.Objects;
 
+// Entité représentant un rôle utilisateur dans le système.
 @Entity
 @Table(name = "roles")
 public class Role {
 
+    // Clé primaire auto-générée
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

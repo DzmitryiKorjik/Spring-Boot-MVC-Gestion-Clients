@@ -4,14 +4,17 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+// Représente un utilisateur dans le système avec des rôles associés
 @Entity
 @Table(name = "users")
 public class User {
 
+    // Clé primaire auto-générée
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Nom d'utilisateur unique
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
@@ -22,6 +25,7 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    // Relation plusieurs-à-plusieurs avec les rôles
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

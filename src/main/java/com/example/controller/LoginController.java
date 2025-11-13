@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+// Contrôleur pour gérer les connexions des utilisateurs
 @Controller
 public class LoginController {
 
@@ -15,6 +16,7 @@ public class LoginController {
         this.loginService = loginService;
     }
 
+    // Afficher le formulaire de connexion
     @GetMapping("/login")
     public String showLoginForm(Model model) {
         if (!model.containsAttribute("user")) {
@@ -23,6 +25,7 @@ public class LoginController {
         return "login";
     }
 
+    // Gérer la soumission du formulaire de connexion
     @PostMapping("/login")
     public String handleLogin(@ModelAttribute("user") User user, RedirectAttributes ra) {
         if (loginService.validateUser(user)) {
@@ -35,6 +38,7 @@ public class LoginController {
         }
     }
 
+    // Page d'accueil après connexion réussie
     @GetMapping({"/", "/home"})
     public String home() {
         return "home";

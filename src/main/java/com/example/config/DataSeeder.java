@@ -1,4 +1,3 @@
-// src/main/java/com/example/config/DataSeeder.java
 package com.example.config;
 
 import com.example.model.Role;
@@ -12,15 +11,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Set;
 
+// Classe de configuration pour initialiser les données de l'application
 @Configuration
 public class DataSeeder {
 
+    // Méthode pour insérer des rôles et un utilisateur administrateur au démarrage de l'application
     @Bean
     CommandLineRunner seed(RoleRepository roles, UserRepository users, PasswordEncoder pe) {
         return args -> {
             Role admin = roles.findByName("ADMIN").orElseGet(() -> roles.save(new Role("ADMIN")));
             Role user  = roles.findByName("USER").orElseGet(() -> roles.save(new Role("USER")));
 
+            // Création de l'utilisateur administrateur s'il n'existe pas déjà
             users.findByUsername("admin").orElseGet(() -> {
                 User u = new User();
                 u.setUsername("admin");

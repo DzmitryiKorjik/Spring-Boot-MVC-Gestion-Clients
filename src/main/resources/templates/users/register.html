@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un utilisateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<div class="navbar">
+    <div class="inner container">
+        <div class="brand">Demo MVC</div>
+        <nav class="nav">
+            <a class="navlink" href="/home">Accueil</a>
+            <a class="navlink" href="/users" sec:authorize="hasRole('ADMIN')">Utilisateurs</a>
+            <form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
+                <input type="hidden" th:if="${_csrf != null}"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button class="btn" type="submit">Se déconnecter</button>
+            </form>
+        </nav>
+    </div>
+</div>
+
+<main class="container center">
+    <div class="card">
+        <h1 style="margin-top:0">Créer un utilisateur</h1>
+
+        <div class="alert" th:if="${msg}" th:text="${msg}"></div>
+
+        <form th:action="@{/users}" method="post" th:object="${form}">
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <label class="label" for="username">Nom d'utilisateur</label>
+            <input class="input" id="username" th:field="*{username}" required>
+            <div class="subtitle" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+
+            <label class="label mt12" for="password">Mot de passe</label>
+            <input class="input" id="password" type="password" th:field="*{password}" required>
+            <div class="subtitle" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+
+            <label class="label mt12" for="confirmPassword">Confirmer le mot de passe</label>
+            <input class="input" id="confirmPassword" type="password" th:field="*{confirmPassword}" required>
+            <div class="subtitle" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+
+            <div class="mt16">
+                <button class="btn" type="submit">Créer</button>
+                <a class="navlink" href="/users">Annuler</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer class="footer">
+    <small>© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> — Demo MVC</small>
+</footer>
+</body>
+</html>

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import com.example.model.User;
 import com.example.repository.UserRepository;
 
+// Service pour la gestion de la connexion des utilisateurs
 @Service
 public class LoginService {
 
@@ -14,6 +15,7 @@ public class LoginService {
         this.userRepository = userRepository;
     }
 
+    // Méthode pour valider les informations de connexion d'un utilisateur
     public boolean validateUser(User user) {
         String u = user.getUsername() == null ? "" : user.getUsername().trim();
         String p = user.getPassword() == null ? "" : user.getPassword().trim();

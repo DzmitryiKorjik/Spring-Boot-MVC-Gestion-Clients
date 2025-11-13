@@ -40,11 +40,15 @@
         <div class="grid mt12">
             <a class="btn" href="/clients" sec:authorize="isAuthenticated()">Gérer les clients</a>
             <a class="btn btn-secondary" href="/login" sec:authorize="isAnonymous()">Se connecter</a>
+            <a class="btn" href="/users" sec:authorize="hasRole('ADMIN')">Utilisateurs</a>
+            <a class="btn" href="/users/new" sec:authorize="hasRole('ADMIN')">Créer un utilisateur</a>
         </div>
         <p class="subtitle mt12">
             Astuce : les actions de création/édition/suppression sont réservées à <strong>ADMIN</strong>.
         </p>
     </div>
+
+    <div class="alert" th:if="${msg}" th:text="${msg}"></div>
 </main>
 
 <footer class="footer">

@@ -11,13 +11,16 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+// Configuration de la sécurité avec Spring Security
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // Bean pour encoder les mots de passe avec BCrypt
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
+    // Bean pour charger les détails de l'utilisateur depuis la base de données
     @Bean
     UserDetailsService userDetailsService(UserRepository users) {
         return username -> users.findByUsername(username)
@@ -30,6 +33,7 @@ public class SecurityConfig {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
+    // Configuration des règles de sécurité HTTP
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -37,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers("/login","/css/**","/js/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/clients/**").hasAnyRole("USER","ADMIN")
                         .requestMatchers(HttpMethod.POST, "/clients/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/users/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
