@@ -1,43 +1,38 @@
-# Spring Boot MVC – Gestion Clients (README)
+# Spring Boot MVC – Clients & Utilisateurs
 
-Application MVC simple avec authentification, rôles et CRUD sur des clients, basée sur Spring Boot 3 + Thymeleaf + Spring Security + Spring Data JPA + PostgreSQL.
-
----
-
-## 1. Fonctionnalités
-
-* Authentification formulaire (Spring Security)
-* Rôles `ADMIN` et `USER`
-
-    * `ADMIN` : CRUD complet sur les clients
-    * `USER` : lecture seule
-* Pages Thymeleaf : `login`, `home`, `clients/list`, `clients/edit`
-* CSRF activé par défaut
-* Persistance PostgreSQL via JPA/Hibernate
+Application MVC avec authentification, rôles, **gestion des clients (CRUD)** et **gestion des utilisateurs** (création par un admin).
+Stack : Spring Boot 3, Spring Security, Spring Data JPA, Thymeleaf, PostgreSQL.
 
 ---
 
-## 2. Stack technique
+## 1) Fonctionnalités
 
-* Java 17
-* Spring Boot 3.3.x
+* **Login/Logout** via formulaire (CSRF activé).
+* **Rôles** :
 
-    * spring-boot-starter-web
-    * spring-boot-starter-thymeleaf
-    * spring-boot-starter-security
-    * spring-boot-starter-data-jpa
-* thymeleaf-extras-springsecurity6
-* PostgreSQL 14+ (pilote 42.x)
+    * `ADMIN` : CRUD complet sur **clients** + gestion des **utilisateurs**.
+    * `USER`  : lecture seule des **clients**.
+* **Gestion des clients** : lister, créer, modifier, supprimer.
+* **Gestion des utilisateurs (admin)** :
+
+    * Lister les utilisateurs.
+    * **Créer un utilisateur** (username + mot de passe confirmé).
+    * Mots de passe stockés en **BCrypt**.
+* **Pages Thymeleaf** harmonisées (même CSS) :
+
+    * `login`, `home`, `clients/list`, `clients/edit`, `users/list`, `users/register`.
+
+> Option possible (non activée par défaut) : **inscription publique** `/register` pour créer un compte `USER`. Voir plus bas.
 
 ---
 
-## 3. Prérequis
+## 2) Prérequis
 
-* JDK 17
-* Maven 3.9+
-* PostgreSQL accessible (local, VM, ou distant)
+* Java **17**
+* Maven **3.9+**
+* PostgreSQL **14+** (local ou VM)
 
-Vérifier versions :
+Vérifier :
 
 ```bash
 mvn -version
@@ -46,22 +41,21 @@ java -version
 
 ---
 
-## 4. Installation des dépendances
+## 3) Dépendances principales (`pom.xml`)
 
-Maven gère tout via `pom.xml`. Commandes de base :
-
-```bash
-mvn -U clean package
-mvn spring-boot:run
-```
-
-Si l’IDE ne “voit” pas les dépendances après un `BUILD SUCCESS`, recharger le projet Maven dans l’IDE.
+* `spring-boot-starter-web`
+* `spring-boot-starter-thymeleaf`
+* `spring-boot-starter-security`
+* `spring-boot-starter-data-jpa`
+* `spring-boot-starter-validation`  ← pour `jakarta.validation.*`
+* `org.postgresql:postgresql`
+* `thymeleaf-extras-springsecurity6`  ← pour `sec:authorize`
 
 ---
 
-## 5. Base de données PostgreSQL
+## 4) Base de données PostgreSQL
 
-### 5.1 Création utilisateur et base
+### 4.1 Création utilisateur & base
 
 Dans `psql` :
 
@@ -71,9 +65,7 @@ CREATE DATABASE myappdb OWNER myapp;
 GRANT ALL PRIVILEGES ON DATABASE myappdb TO myapp;
 ```
 
-### 5.2 Connexion locale (PostgreSQL sur la même machine que l’app)
-
-`application.properties` :
+### 4.2 Configuration Spring (`src/main/resources/application.properties`)
 
 ```properties
 spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/myappdb
@@ -81,105 +73,72 @@ spring.datasource.username=myapp
 spring.datasource.password=root
 spring.datasource.driver-class-name=org.postgresql.Driver
 
-spring.jpa.hibernate.ddl-auto=update  # dev
+spring.jpa.hibernate.ddl-auto=update     # dev
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.open-in-view=false
 ```
 
-### 5.3 VM VirtualBox en NAT (PostgreSQL dans une VM Ubuntu)
+### 4.3 PostgreSQL dans une VM VirtualBox (NAT)
 
-1. PostgreSQL côté VM
-   `/etc/postgresql/16/main/postgresql.conf`
+* VM éteinte → **NAT Port Forwarding** :
 
-```
-listen_addresses = '*'
-```
+    * Name: `postgres`, TCP, **Host IP `127.0.0.1`**, **Host Port `5432`** (ou `55432`)
+    * Guest IP `10.0.2.15`, Guest Port `5432`
+* Dans la VM :
 
-`/etc/postgresql/16/main/pg_hba.conf`
+    * `postgresql.conf` : `listen_addresses='*'`
+    * `pg_hba.conf`     : `host  myappdb  myapp  10.0.2.2/32  scram-sha-256`
+    * `sudo systemctl restart postgresql`
+* Test côté Windows :
 
-```
-host    myappdb    myapp    10.0.2.2/32    scram-sha-256
-```
+  ```powershell
+  Test-NetConnection 127.0.0.1 -Port 5432
+  ```
 
-Redémarrer :
+---
+
+## 5) Lancer l’application
+
+### Via plugin
 
 ```bash
-sudo systemctl restart postgresql
-sudo ss -ltnp | grep 5432   # doit montrer 0.0.0.0:5432
+mvn spring-boot:run
 ```
 
-2. VirtualBox → NAT Port Forwarding (VM éteinte)
+### Via JAR
 
-```
-Name: postgres, Protocol: TCP
-Host IP: 127.0.0.1      Host Port: 5432          (ou 55432 si 5432 utilisé)
-Guest IP: 10.0.2.15     Guest Port: 5432         (IP courante de la VM)
-```
-
-3. Côté Windows, tester :
-
-```powershell
-Test-NetConnection 127.0.0.1 -Port 5432
+```bash
+mvn -DskipTests clean package
+java -jar target/spring-boot-mvc-1.0-SNAPSHOT.jar
 ```
 
-4. URL JDBC côté app (Windows) :
-
-```properties
-spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/myappdb
-# ... username/password comme plus haut
-```
+Ouvrir : `http://localhost:8080/login`
 
 ---
 
-## 6. Structure du projet (extrait)
+## 6) Données de départ (seeder)
 
-```
-src/
-  main/
-    java/com/example/
-      SpringBootMvcLoginApplication.java
-      config/
-        SecurityConfig.java
-        DataSeeder.java         # insère ADMIN/USER et admin/admin si absent
-      controller/
-        LoginController.java    # GET /login uniquement
-        ClientController.java
-      model/
-        User.java
-        Role.java
-        Client.java
-      repository/
-        UserRepository.java
-        RoleRepository.java
-        ClientRepository.java
-    resources/
-      templates/
-        login.html
-        home.html
-        clients/
-          list.html
-          edit.html
-      application.properties
-pom.xml
-```
+Un `DataSeeder` (si présent dans `config`) crée :
+
+* Rôles : `ADMIN`, `USER`
+* Utilisateur : **admin / admin** (mot de passe BCrypt)
+
+> Si vous aviez un ancien `admin` en clair, supprimez-le d’abord pour laisser le seeder le recréer.
 
 ---
 
-## 7. Sécurité
-
-### 7.1 SecurityConfig (points clés)
-
-* Ne pas gérer `POST /login` dans `LoginController` : le POST `/login` est géré par Spring Security.
-* Exemple de règles :
+## 7) Sécurité (extrait)
 
 ```java
 http
   .authorizeHttpRequests(auth -> auth
       .requestMatchers("/login","/css/**","/js/**").permitAll()
-      .requestMatchers(HttpMethod.GET, "/clients/**").hasAnyRole("USER","ADMIN")
+      .requestMatchers(HttpMethod.GET,  "/clients/**").hasAnyRole("USER","ADMIN")
       .requestMatchers(HttpMethod.POST, "/clients/**").hasRole("ADMIN")
+      .requestMatchers(HttpMethod.GET,  "/users/**").hasRole("ADMIN")
+      .requestMatchers(HttpMethod.POST, "/users/**").hasRole("ADMIN")
       .anyRequest().authenticated()
   )
   .formLogin(form -> form
@@ -188,7 +147,7 @@ http
       .defaultSuccessUrl("/home", true)
   )
   .logout(l -> l
-      .logoutUrl("/logout")               // POST /logout
+      .logoutUrl("/logout")              // POST /logout (avec CSRF)
       .logoutSuccessUrl("/login?logout")
       .invalidateHttpSession(true)
       .deleteCookies("JSESSIONID")
@@ -196,156 +155,123 @@ http
   );
 ```
 
-### 7.2 Thymeleaf Security dialect
+**UserDetailsService** : charge l’utilisateur depuis `UserRepository`, applique les rôles `ROLE_...`, et **.disabled(!enabled)**.
 
-`pom.xml` :
+---
 
-```xml
-<dependency>
-  <groupId>org.thymeleaf.extras</groupId>
-  <artifactId>thymeleaf-extras-springsecurity6</artifactId>
-</dependency>
+## 8) Routes & pages
+
+| Route                  | Méthode | Rôle       | Vue                   | Description                       |
+| ---------------------- | ------- | ---------- | --------------------- | --------------------------------- |
+| `/login`               | GET     | public     | `login.html`          | Formulaire de connexion           |
+| `/home` `/`            | GET     | auth       | `home.html`           | Tableau de bord                   |
+| `/clients`             | GET     | USER/ADMIN | `clients/list.html`   | Liste des clients                 |
+| `/clients`             | POST    | ADMIN      | redirect              | Créer un client                   |
+| `/clients/{id}/edit`   | GET     | USER/ADMIN | `clients/edit.html`   | Formulaire d’édition              |
+| `/clients/{id}`        | POST    | ADMIN      | redirect              | Mettre à jour un client           |
+| `/clients/{id}/delete` | POST    | ADMIN      | redirect              | Supprimer un client               |
+| `/users`               | GET     | ADMIN      | `users/list.html`     | Liste des utilisateurs            |
+| `/users/new`           | GET     | ADMIN      | `users/register.html` | Créer un utilisateur              |
+| `/users`               | POST    | ADMIN      | redirect              | Enregistrer un nouvel utilisateur |
+| `/logout`              | POST    | auth       | redirect              | Déconnexion                       |
+
+> Tous les formulaires POST incluent le **CSRF**.
+
+---
+
+## 9) Gestion des utilisateurs (admin)
+
+* **DTO** : `RegisterForm` (`jakarta.validation`), champs `username`, `password`, `confirmPassword`.
+* **Service** : `UserService#createUser(form)` :
+
+    * vérifie l’unicité du username
+    * vérifie la correspondance des mots de passe
+    * `BCrypt` du mot de passe
+    * rôle par défaut `USER`
+* **Vues** :
+
+    * `users/list.html` : tableau des utilisateurs (username, rôles, enabled)
+    * `users/register.html` : formulaire de création (admin)
+
+> Pour promouvoir un utilisateur en `ADMIN`, on peut ajouter une action (ex. POST `/users/{id}/promote`) qui ajoute le rôle `ADMIN` — facile à étendre.
+
+---
+
+## 10) Structure du projet (extrait)
+
 ```
-
-Dans les templates :
-
-```html
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-```
-
-Exemples :
-
-```html
-<p sec:authorize="isAuthenticated()">Connecté en tant que <strong sec:authentication="name">user</strong></p>
-
-<form th:action="@{/logout}" method="post" sec:authorize="isAuthenticated()">
-  <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-  <button type="submit">Se déconnecter</button>
-</form>
+src/main/java/com/example/
+  SpringBootMvcLoginApplication.java
+  config/
+    SecurityConfig.java
+    DataSeeder.java
+  controller/
+    LoginController.java
+    ClientController.java
+    UserController.java
+  model/
+    User.java
+    Role.java
+    Client.java
+  repository/
+    UserRepository.java
+    RoleRepository.java
+    ClientRepository.java
+  service/
+    UserService.java
+  web/
+    RegisterForm.java
+src/main/resources/
+  templates/
+    home.html
+    login.html
+    clients/
+      list.html
+      edit.html
+    users/
+      list.html
+      register.html
+  static/css/app.css
+  application.properties
 ```
 
 ---
 
-## 8. Contrôleurs et vues
+## 11) Dépannage rapide
 
-* `LoginController` : uniquement `GET /login` qui renvoie `login.html`.
-* `ClientController` :
+* **`Connection to 127.0.0.1:5432 refused`**
+  Port forwarding manquant/port erroné. Tester :
+  `Test-NetConnection 127.0.0.1 -Port 5432` (Windows).
+  Adapter `spring.datasource.url` au **Host Port**.
 
-    * `GET /clients` : liste + formulaire d’ajout
-    * `POST /clients` : création
-    * `GET /clients/{id}/edit` : page d’édition
-    * `POST /clients/{id}` : mise à jour
-    * `POST /clients/{id}/delete` : suppression
+* **`password authentication failed`**
+  Mauvais mot de passe ou `pg_hba.conf`. Vérifier la ligne `10.0.2.2/32` (NAT).
 
-Formulaires POST : inclure le token CSRF.
+* **Template 500 / Whitelabel**
+  Fichier manquant : s’assurer que `users/list.html` et `clients/list.html` existent aux bons chemins.
 
----
+* **`Cannot resolve symbol validation` dans l’IDE**
+  Ajouter `spring-boot-starter-validation`, recharger Maven, imports en `jakarta.validation.*`.
 
-## 9. Démarrage
-
-Mode plugin :
-
-```bash
-mvn spring-boot:run
-```
-
-Mode JAR :
-
-```bash
-mvn -DskipTests clean package
-java -jar target/spring-boot-mvc-1.0-SNAPSHOT.jar
-```
+* **`GET /logout` → 404**
+  Logout est **POST** par défaut. Utiliser un `<form method="post" action="/logout">` + CSRF.
 
 ---
 
-## 10. Données de départ
+## 12) Activer l’inscription **publique** (option)
 
-`DataSeeder` crée automatiquement :
+Si vous voulez une page d’inscription ouverte à tous (`/register`) qui crée un **USER** :
 
-* Rôles : `ADMIN`, `USER`
-* Utilisateur : `admin` / `admin` (mot de passe BCrypt)
-
-Si vous aviez un mot de passe en clair en base, supprimez l’utilisateur et laissez le seeder le recréer.
-
----
-
-## 11. Dépannage (erreurs fréquentes)
-
-* `Connection to 127.0.0.1:5432 refused`
-  Port forwarding manquant ou mauvais port.
-  Vérifier `Test-NetConnection 127.0.0.1 -Port 5432` et l’URL JDBC.
-
-* `password authentication failed for user "myapp"`
-  Mauvais mot de passe ou `pg_hba.conf` incorrect. Vérifier la ligne `10.0.2.2/32` en NAT.
-
-* `relation "xxx" does not exist`
-  Tables non créées. En dev, mettre `spring.jpa.hibernate.ddl-auto=update` ou exécuter le SQL de création.
-
-* `package org.springframework.data.jpa.repository does not exist`
-  Dépendance manquante ou IDE non synchronisé.
-  Vérifier `spring-boot-starter-data-jpa` dans `pom.xml` et faire `mvn -U clean package` puis recharger Maven dans l’IDE.
-
-* `Non-parseable POM` / `MalformedInputException` sur `application.properties`
-  Encodage. Enregistrer les fichiers en UTF-8.
-  Vous pouvez aussi désactiver le filtering des resources dans le `<build>`.
-
-* `TemplateProcessingException` avec `${#httpServletRequest.remoteUser}`
-  Utiliser le dialecte `sec:` ou protéger l’expression avec un test de null :
-
-  ```html
-  <p th:if="${#httpServletRequest != null and #httpServletRequest.remoteUser != null}">...</p>
-  ```
-
-* `GET /logout` donne 404
-  Par défaut, logout est en POST. Utiliser un `<form method="post" action="/logout">` avec CSRF.
-
-* Port 8080 occupé
-  Changer le port :
-
-  ```properties
-  server.port=8081
-  ```
+* Ajoutez un contrôleur `RegisterController` (GET/POST `/register`) qui réutilise `UserService#createUser`.
+* Dans `SecurityConfig` :
+  `.requestMatchers("/register", "/register/**").permitAll()`
+* Vue : `templates/register.html` (copie de `users/register.html` sans restrictions ADMIN).
 
 ---
 
-## 12. Commandes utiles
+## 13) Bonnes pratiques
 
-Maven :
-
-```bash
-mvn clean package
-mvn spring-boot:run
-mvn dependency:purge-local-repository -DreResolve=true
-```
-
-PostgreSQL (psql) :
-
-```sql
-\conninfo
-\l
-\c myappdb
-\dt
-\d clients
-\q
-```
-
-Windows (test port) :
-
-```powershell
-Test-NetConnection 127.0.0.1 -Port 5432
-```
-
----
-
-## 13. Bonnes pratiques
-
-* Garder les entités JPA avec imports `jakarta.persistence.*` (Spring Boot 3).
-* En prod : `spring.jpa.hibernate.ddl-auto=validate`, migrations via Flyway ou scripts SQL.
-* Ne jamais stocker les mots de passe en clair : BCrypt via `PasswordEncoder`.
-
----
-
-## 14. Licence
-
-Usage pédagogique / interne. Adapter selon vos besoins.
+* Imports JPA en **`jakarta.persistence.*`** (Spring Boot 3).
+* En prod : `spring.jpa.hibernate.ddl-auto=validate` + **Flyway**/scripts SQL.
+* Ne jamais stocker de mot de passe en clair (toujours `PasswordEncoder` / BCrypt).
+* Protéger les actions sensibles côté **UI** *et* côté **SecurityConfig**.
